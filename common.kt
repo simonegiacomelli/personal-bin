@@ -1,6 +1,14 @@
-#!/usr/bin/env kscript
 import java.io.File
 import java.util.concurrent.TimeUnit
+
+fun String.runCommandInheritIO() {
+
+    val proc = ProcessBuilder(*split(" ").toTypedArray())
+        .inheritIO()
+        .start()
+
+    proc.waitFor(1, TimeUnit.MINUTES)
+}
 
 fun String.runCommand(): String {
 
@@ -15,18 +23,6 @@ fun String.runCommand(): String {
     return proc.inputStream.bufferedReader().readText()
 }
 
-fun main(args: Array<String>) {
-    val port = args.firstOrNull()
-    if (port == null) {
-        println("Please, specify tcp port whose process will be killed")
-        return
-    }
-    val pids = getPidsForTcpPort(args.first().toInt())
-    pids.forEach { pid ->
-        println("Killing $pid")
-        "kill $pid".runCommand().also { }
-    }
-}
 
 fun getPidsForTcpPort(port: Int): List<String> {
     val lsofOutput = "lsof -i tcp:$port".runCommand()
@@ -49,6 +45,3 @@ fun getPidsForTcpPort(port: Int): List<String> {
 
 fun String.splitLines() = this.split(" ").filter { it.isNotBlank() }
 
-
-
-main(args)
