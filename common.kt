@@ -45,3 +45,11 @@ fun getPidsForTcpPort(port: Int): List<String> {
 
 fun String.splitLines() = this.split(" ").filter { it.isNotBlank() }
 
+fun folderOfScript(): File {
+    val env = System.getenv("KSCRIPT_FILE")
+    if (env.isNullOrBlank()) {
+        println("Env KSCRIPT_FILE is not set. Falling back to File(.)")
+        return File(".").canonicalFile
+    }
+    return File(env).parentFile.canonicalFile
+}
