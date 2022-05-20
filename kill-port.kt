@@ -1,6 +1,7 @@
 #!/usr/bin/env kscript
 
 //INCLUDE common.kt
+//INCLUDE detect_os.kt
 
 
 fun main(args: Array<String>) {
