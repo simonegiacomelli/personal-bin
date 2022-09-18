@@ -1,0 +1,7 @@
+#!/bin/bash
+
+#osascript -e 'tell app "Terminal" to do script "cd ~"'
+osascript -e 'tell app "Terminal"
+    do script "cd ~"
+    activate
+end tell'
