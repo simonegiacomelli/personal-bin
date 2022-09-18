@@ -1,7 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env python3
+import os
+import sys
 
-#osascript -e 'tell app "Terminal" to do script "cd ~"'
-osascript -e 'tell app "Terminal"
-    do script "cd ~"
-    activate
-end tell'
+if sys.platform == 'darwin':
+    os.system(f"""osascript -e 'tell app "Terminal"
+           do script "cd {os.getcwd()}"
+           activate
+       end tell'""")
+else:
+    os.system(f"exo-open --launch TerminalEmulator")
