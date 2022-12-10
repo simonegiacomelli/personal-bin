@@ -1,2 +1,93 @@
-#!/bin/bash
-xdg-open $(git remote -v | cut -d @ -f 2 | cut -d ' ' -f 1 | head -1 | sed 's/:/\//' | sed 's/.git$//' | sed s'/^/https:\/\//') >& /dev/null &
+#!/usr/bin/env python3
+import os
+import sys
+from urllib.parse import urlparse, urlsplit
+from strings import removeprefix, removesuffix
+
+
+def _protocol_git(line: str) -> str:
+    line = removeprefix(line, 'git@')
+    line = line.replace(':', '@', 1)
+    line = 'https://' + line
+    url = urlparse(line)
+    username = url.hostname
+    hostname = url.username
+    line = f'https://{hostname}/{username}{url.path}'
+    return line
+
+
+def extract_git_url(content: str) -> str:
+    def fetch_lines(line: str) -> bool:
+        return line.endswith(' (fetch)')
+
+    lines = content.split('\n')
+    filtered = list(filter(fetch_lines, lines))
+
+    def raise_error():
+        raise Exception(f'Unable to find repository url for content=`{content}`')
+
+    if len(filtered) <= 0:
+        raise_error()
+    line = filtered[0]
+    line = removesuffix(line, ' (fetch)')
+    line = removeprefix(line, 'origin')
+    line = line.strip()
+    line = removesuffix(line, '.git')
+    if line.startswith('https://') or line.startswith('http://'):
+        return line
+
+    if line.startswith('git@'):
+        return _protocol_git(line)
+
+    raise_error()
+
+
+import unittest
+
+
+class TestGitOpen(unittest.TestCase):
+    def xx_test_bed(self):
+        u = urlparse('https://user1:password1@search-books-edupractice.es.amazonaws.com', allow_fragments=True)
+        print(u)
+        print('hostname', u.hostname)
+        print('username', u.username)
+        print('password', u.password)
+
+    def test_git_protocol(self):
+        content = """origin	git@github.com:simonegiacomelli/sicp-exercises.git (fetch)
+origin	git@github.com:simonegiacomelli/sicp-exercises.git (push)
+"""
+        target = extract_git_url(content)
+        self.assertEqual('https://github.com/simonegiacomelli/sicp-exercises', target)
+
+    def test_https_protocol(self):
+        content = """origin	https://github.com/duo-labs/duo-blog-going-passwordless-with-py-webauthn.git (fetch)
+origin	https://github.com/duo-labs/duo-blog-going-passwordless-with-py-webauthn.git (push)
+"""
+        target = extract_git_url(content)
+        self.assertEqual('https://github.com/duo-labs/duo-blog-going-passwordless-with-py-webauthn', target)
+
+
+def system_open():
+    if sys.platform == 'darwin':
+        op = 'open'
+    else:
+        op = 'xdg-open'
+    return op
+
+
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] == 'test':
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestGitOpen)
+        unittest.TextTestRunner().run(suite)
+        return
+
+    repo_remote = os.popen('git remote -v').read()
+    url = extract_git_url(repo_remote)
+    cmd = f"{system_open()} '{url}'"
+    print(f'executing: {cmd}')
+    os.system(cmd)
+
+
+if __name__ == '__main__':
+    main()

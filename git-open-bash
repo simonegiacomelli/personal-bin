@@ -1,0 +1,2 @@
+#!/bin/bash
+xdg-open $(git remote -v | cut -d @ -f 2 | cut -d ' ' -f 1 | head -1 | sed 's/:/\//' | sed 's/.git$//' | sed s'/^/https:\/\//') >& /dev/null &
