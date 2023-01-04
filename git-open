@@ -23,11 +23,9 @@ def extract_git_url(content: str) -> str:
     lines = content.split('\n')
     filtered = list(filter(fetch_lines, lines))
 
-    def raise_error():
-        raise Exception(f'Unable to find repository url for content=`{content}`')
-
     if len(filtered) <= 0:
-        raise_error()
+        return ''
+
     line = filtered[0]
     line = removesuffix(line, ' (fetch)')
     line = removeprefix(line, 'origin')
@@ -39,7 +37,7 @@ def extract_git_url(content: str) -> str:
     if line.startswith('git@'):
         return _protocol_git(line)
 
-    raise_error()
+    raise Exception(f'Unable to find repository url for content=`{content}`')
 
 
 import unittest
@@ -67,6 +65,9 @@ origin	https://github.com/duo-labs/duo-blog-going-passwordless-with-py-webauthn.
         target = extract_git_url(content)
         self.assertEqual('https://github.com/duo-labs/duo-blog-going-passwordless-with-py-webauthn', target)
 
+    def test_no_remote(self):
+        target = extract_git_url("")
+        self.assertEqual('',target)
 
 def system_open():
     if sys.platform == 'darwin':
@@ -82,11 +83,17 @@ def main():
         unittest.TextTestRunner().run(suite)
         return
 
-    repo_remote = os.popen('git remote -v').read()
+    gitremote = 'git remote -v'
+    repo_remote = os.popen(gitremote).read()
     url = extract_git_url(repo_remote)
-    cmd = f"{system_open()} '{url}'"
-    print(f'executing: {cmd}')
-    os.system(cmd)
+    if url != '':
+        cmd = f"{system_open()} '{url}'"
+        print(f'executing: {cmd}')
+        os.system(cmd)
+    else:
+        if repo_remote == '':
+            repo_remote = '-= empty =-'
+        print(f'Unable to find remote url to open. The output of `{gitremote}` is:\n' + repo_remote)
 
 
 if __name__ == '__main__':
