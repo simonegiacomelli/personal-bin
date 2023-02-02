@@ -33,22 +33,43 @@ def status(content: str) -> Status:
 
 
 def activate(content: str) -> str:
-    s = status(content)
-    if s == Status.MISSING:
-        return content + '\n' + _option
-    if s == Status.ACTIVE:
+    return update(content, Status.ACTIVE)
+
+
+def comment(content: str) -> str:
+    return update(content, Status.COMMENTED)
+
+
+def remove(content: str) -> str:
+    return update(content, Status.MISSING)
+
+
+def update(content: str, new: Status) -> str:
+    old = status(content)
+    if old == new:
         return content
-    if s == Status.COMMENTED:
-        lines = content.split('\n')
-        res = ''
-        for line in lines:
-            if _marker not in line:
-                res += line + '\n'
-                continue
-            if line.strip().startswith('#'):
-                res += _option + '\n'
-        return res
-    assert 'unhandled' == ''
+
+    lines = content.split('\n')
+    index = -1
+    for i, line in enumerate(lines):
+        if _marker in line:
+            index = i
+            break
+
+    if index == -1:
+        index = len(lines)
+        lines.append('')
+
+    if new == Status.MISSING:
+        del lines[index]
+    elif new == Status.ACTIVE:
+        lines[index] = _option
+    elif new == Status.COMMENTED:
+        lines[index] = '#' + _option
+    else:
+        assert 'unexpected' == 'state'
+
+    return '\n'.join(lines)
 
 
 import unittest
@@ -75,14 +96,39 @@ class TestJetbrainsFix(unittest.TestCase):
         actual = activate('')
         actual = activate(actual)
         self.assertEqual(Status.ACTIVE, status(actual))
-        parts = actual.split(_marker)
-        self.assertEqual(2, len(parts))
+        _assert_no_duplicates(actual)
 
     def test_commented_activate(self):
         actual = activate('\nfoo=bar\n#' + _option + '\none=1')
-        self.assertEqual(Status.ACTIVE, status(actual))
-        parts = actual.split(_marker)
-        self.assertEqual(2, len(parts))
+        self.assertEqual('\nfoo=bar\n' + _option + '\none=1', actual)
+        _assert_no_duplicates(actual)
+
+    def test_comment(self):
+        actual = comment('\nfoo=bar\n' + _option + '\none=1')
+        self.assertEqual('\nfoo=bar\n#' + _option + '\none=1', actual)
+        _assert_no_duplicates(actual)
+
+    def test_remove(self):
+        actual = remove('\nfoo=bar\n' + _option + '\none=1')
+        self.assertEqual('\nfoo=bar\none=1', actual)
+        _assert_no_duplicates(actual)
+
+    def test_activate_no_previous(self):
+        actual = activate('\nfoo=bar\none=1')
+        self.assertEqual('\nfoo=bar\none=1\n' + _option, actual)
+        _assert_no_duplicates(actual)
+
+    def test_duplicates(self):
+        try:
+            _assert_no_duplicates(_option + '\n' + _option)
+        except:
+            return 'ok'
+        self.fail('the helper function does not work correctly')
+
+
+def _assert_no_duplicates(actual):
+    parts = actual.split(_marker)
+    unittest.TestCase().assertLessEqual(len(parts), 2)
 
 
 def main():
