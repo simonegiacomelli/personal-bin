@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+import os
+import sys
+from enum import Enum
+from urllib.parse import urlparse, urlsplit
+from strings import removeprefix, removesuffix
+
+
+class Status(Enum):
+    ACTIVE = 'A'
+    COMMENTED = 'C'
+    MISSING = 'M'
+
+
+_marker = '-Dsun.java2d.uiScale='
+_option = '-Dsun.java2d.uiScale=2'
+
+
+def status(content: str) -> Status:
+    if _marker not in content:
+        return Status.MISSING
+
+    lines = content.split('\n')
+    for line in lines:
+        if _marker not in line:
+            continue
+        if line.strip().startswith('#'):
+            return Status.COMMENTED
+        else:
+            return Status.ACTIVE
+
+    assert 'whhaaat' == 'success'
+
+
+def activate(content: str) -> str:
+    s = status(content)
+    if s == Status.MISSING:
+        return content + '\n' + _option
+    if s == Status.ACTIVE:
+        return content
+    if s == Status.COMMENTED:
+        lines = content.split('\n')
+        res = ''
+        for line in lines:
+            if _marker not in line:
+                res += line + '\n'
+                continue
+            if line.strip().startswith('#'):
+                res += _option + '\n'
+        return res
+    assert 'unhandled' == ''
+
+
+import unittest
+
+
+class TestJetbrainsFix(unittest.TestCase):
+
+    def test_missing(self):
+        self.assertEqual(Status.MISSING, status(''))
+
+    def test_active(self):
+        self.assertEqual(Status.ACTIVE, status('\n\n-Dsun.java2d.uiScale=\n\n'))
+        self.assertEqual(Status.ACTIVE, status('\n\n-Dsun.java2d.uiScale=2\n\n'))
+
+    def test_commented(self):
+        self.assertEqual(Status.COMMENTED, status('\n\n#-Dsun.java2d.uiScale=\n\n'))
+        self.assertEqual(Status.COMMENTED, status('\n\n# -Dsun.java2d.uiScale=\n\n'))
+
+    def test_activate(self):
+        actual = activate('')
+        self.assertEqual(Status.ACTIVE, status(actual))
+
+    def test_double_activate(self):
+        actual = activate('')
+        actual = activate(actual)
+        self.assertEqual(Status.ACTIVE, status(actual))
+        parts = actual.split(_marker)
+        self.assertEqual(2, len(parts))
+
+    def test_commented_activate(self):
+        actual = activate('\nfoo=bar\n#' + _option + '\none=1')
+        self.assertEqual(Status.ACTIVE, status(actual))
+        parts = actual.split(_marker)
+        self.assertEqual(2, len(parts))
+
+
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] == 'test':
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestJetbrainsFix)
+        unittest.TextTestRunner().run(suite)
+        return
+
+
+if __name__ == '__main__':
+    main()
