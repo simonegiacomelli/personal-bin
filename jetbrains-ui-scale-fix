@@ -2,6 +2,9 @@
 import os
 import sys
 from enum import Enum
+from glob import glob
+from os.path import expanduser
+from pathlib import Path
 from urllib.parse import urlparse, urlsplit
 from strings import removeprefix, removesuffix
 
@@ -132,11 +135,38 @@ def _assert_no_duplicates(actual):
 
 
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    arg = sys.argv[1] if len(sys.argv) > 1 else ''
+    if arg == 'test':
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestJetbrainsFix)
         unittest.TextTestRunner().run(suite)
         return
 
+    if arg == 'add':
+        fun = activate
+    elif arg == 'com':
+        fun = comment
+    elif arg == 'rem':
+        fun = remove
+    elif arg == 'show':
+        fun = None
+    else:
+        print('please specify an argument: show, add, rem, com or test ')
+        return
 
+    folder = '~/.local/share/JetBrains/Toolbox/apps/'
+    path = Path(expanduser(folder))
+    print(f'Working on folder {path}\n')
+
+    for g in path.rglob('*.vmoptions'):
+        if not g.parent.name.startswith('ch-'):
+            continue
+        text = g.read_text()
+        if fun is not None:
+            text = fun(text)
+            g.write_text(text)
+
+        print(f'{status(text)}  {g}')
+
+    print('\ndone.')
 if __name__ == '__main__':
     main()
