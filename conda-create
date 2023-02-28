@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+import os
+import sys
+from pathlib import Path
+import subprocess
+
+
+def main():
+    cwd = Path(os.getcwd())
+    name = input(f'Environment name. Press enter to accept `{cwd.name}`: ')
+    if name == '':
+        name = cwd.name
+
+    assert len(name) > 0
+
+    def_version = '3.7'
+    version = input(f'Python version. Press enter to accept `{def_version}`: ')
+    if version == '':
+        version = def_version
+
+    p = subprocess.Popen(f'conda create python={version} --name {name} -y',
+                         shell=True,
+                         stderr=subprocess.PIPE)
+
+    for line in p.stderr:
+        print(line)
+
+
+if __name__ == '__main__':
+    main()
