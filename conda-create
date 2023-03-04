@@ -6,15 +6,37 @@ import subprocess
 
 
 def main():
+    input_name = input
+    input_version = input
+
+    def ret(string: str):
+        return lambda x: string
+
+    def process(arg: str):
+        if arg == '-':
+            return ret('')
+        else:
+            return ret(arg)
+
+    input_blank = ret('')
+    if len(sys.argv) > 1 and sys.argv[1] == '-default':
+        input_name = input_blank
+        input_version = input_blank
+    elif len(sys.argv) > 1:
+        input_name = process(sys.argv[1])
+
+    if len(sys.argv) > 2:
+        input_version = process(sys.argv[2])
+
     cwd = Path(os.getcwd())
-    name = input(f'Environment name. Press enter to accept `{cwd.name}`: ')
+    name = input_name(f'Environment name. Press enter to accept `{cwd.name}`: ')
     if name == '':
         name = cwd.name
 
     assert len(name) > 0
 
     def_version = '3.7'
-    version = input(f'Python version. Press enter to accept `{def_version}`: ')
+    version = input_version(f'Python version. Press enter to accept `{def_version}`: ')
     if version == '':
         version = def_version
 
