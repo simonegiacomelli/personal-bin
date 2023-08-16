@@ -158,8 +158,6 @@ def main():
     print(f'Working on folder {path}\n')
 
     for g in path.rglob('*.vmoptions'):
-        if not g.parent.name.startswith('ch-'):
-            continue
         text = g.read_text()
         if fun is not None:
             text = fun(text)
