@@ -21,7 +21,7 @@ def main():
         print('please specify an argument: show, add, rem, com or test ')
         return
 
-    folder = '~/.local/share/JetBrains/Toolbox/apps/'
+    folder = '~/.config/JetBrains/'
     path = Path(expanduser(folder))
     print(f'Working on folder {path}\n')
 
