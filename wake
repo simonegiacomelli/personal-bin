@@ -17,19 +17,29 @@ def wake_on_lan(mac: str, interface: str = None):
         sock.connect(('255.255.255.255', 9))
         sock.send(packet)
 
+def main():
+    if len(sys.argv) != 2:
+        print('Please, specify a hostname or a mac to wake')
+        exit(1)
 
-if len(sys.argv) != 2:
-    print('Please, specify a hostname or a mac to wake')
-    exit(1)
+    hostname = sys.argv[1]
 
-hostname = sys.argv[1]
+    prop_file = Path(__file__).parent / 'personal-bin-config/wakeonlan.properties'
+    text = prop_file.read_text()
+    props = text_to_props(text)
 
-prop_file = Path(__file__).parent / 'personal-bin-config/wakeonlan.properties'
-lines = prop_file.read_text().splitlines(keepends=False)
-props = dict([v.split('=', maxsplit=1) for v in lines])
+    mac = props.get(f'host.{hostname}', None)
+    if mac is None:
+        print(f'Configuration key `{hostname}` not found in `{prop_file}`')
+        exit(2)
+    wake_on_lan(mac)
 
-mac = props.get(f'host.{hostname}', None)
-if mac is None:
-    print(f'Configuration key `{hostname}` not found in `{prop_file}`')
-    exit(2)
-wake_on_lan(mac)
+
+def text_to_props(text):
+    lines = text.splitlines(keepends=False)
+    props = dict([v.split('=', maxsplit=1) for v in lines])
+    return props
+
+
+if __name__ == '__main__':
+    main()
