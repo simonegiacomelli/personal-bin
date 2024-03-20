@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+
+import argparse
+import subprocess
+import uuid
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+
+def modify_vm_xml(current_definition, new_name, new_uuid):
+    root = ET.fromstring(current_definition)
+    root.find('name').text = new_name
+    root.find('uuid').text = new_uuid
+    new_xml_str = ET.tostring(root, encoding='unicode')
+    return new_xml_str
+
+
+def read_vm_xml_and_write_new(domain, new_domain):
+    print(f"Creating new VM {new_domain} from {domain}")
+
+    original_xml = subprocess.check_output(["virsh", "dumpxml", domain]).decode()
+    new_xml = modify_vm_xml(original_xml, new_domain, str(uuid.uuid4()))
+    vm_new_path = Path(f'/tmp/virsh_duplicate__{new_domain}.xml')
+    vm_new_path.write_text(new_xml)
+    subprocess.run(["virsh", "define", vm_new_path])
+    vm_new_path.unlink()
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Duplicate a VM.')
+    parser.add_argument('domain', type=str, help='The name of the original VM.')
+    parser.add_argument('new_domain', type=str, help='The name for the new VM.')
+
+    args = parser.parse_args()
+
+    read_vm_xml_and_write_new(args.domain, args.new_domain)
+
+
+if __name__ == "__main__":
+    main()
