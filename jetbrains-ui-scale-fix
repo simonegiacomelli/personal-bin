@@ -7,25 +7,19 @@ from jetbrainslib import activate, comment, remove, status
 
 
 def main():
-    arg = sys.argv[1] if len(sys.argv) > 1 else 'show'
+    def print_help():
+        print('Usage: jetbrains-ui-scale-fix [add|com|rem|show]')
 
-    if arg == 'add':
-        fun = activate
-    elif arg == 'com':
-        fun = comment
-    elif arg == 'rem':
-        fun = remove
-    elif arg == 'show':
-        fun = None
-    else:
-        print('please specify an argument: show, add, rem, com or test ')
-        return
+    no_args = len(sys.argv) <= 1
+    arg = 'show' if no_args else sys.argv[1]
+    args = {'add': activate, 'com': comment, 'rem': remove, 'show': None}
+    fun = args.get(arg, None)
 
-    folder = '~/.config/JetBrains/'
-    path = Path(expanduser(folder))
-    print(f'Working on folder {path}\n')
+    folders = ['~/.config/JetBrains/', '~/.config/Google']
+    paths = [Path(expanduser(folder)) for folder in folders]
+    print(f'Working on folders {[str(p) for p in paths]}\n')
 
-    for g in path.rglob('*.vmoptions'):
+    for g in [p for path in paths for p in path.rglob('*.vmoptions')]:
         text = g.read_text()
         if fun is not None:
             text = fun(text)
@@ -33,6 +27,9 @@ def main():
 
         print(f'{status(text)}  {g}')
 
+    if no_args:
+        print()
+        print_help()
     print('\ndone.')
 
 
