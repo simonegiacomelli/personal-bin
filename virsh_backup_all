@@ -1,18 +1,19 @@
 #!/bin/bash
 
-# Check if the vm_backup directory already exists
-if [ -d "vm_backup" ]; then
-  echo "Error: The vm_backup directory already exists."
+# Check if the virsh_xml_backup directory already exists
+if [ -d "virsh_xml_backup" ]; then
+  echo "Error: The virsh_xml_backup directory already exists."
   exit 1
 fi
 
 # Create a directory to store the XML backups
-mkdir -p vm_backup
+mkdir -p virsh_xml_backup
 
 # Loop over all domains (active and inactive)
 for domain in $(virsh list --all --name); do
   # Export the domain's XML configuration
-  virsh dumpxml $domain > vm_backup/${domain}.xml
+  echo "Exporting configuration for domain: $domain"
+  virsh dumpxml $domain > virsh_xml_backup/${domain}.xml
 done
 
-echo "All domain configurations have been exported to the vm_backup directory."
+echo "All domain configurations have been exported to the virsh_xml_backup directory."
