@@ -28,7 +28,8 @@ def main():
     event = sys.argv[1].lower()  # ACPI event passed as argument
     current_brightness = get_variable('brightness')
     max_brightness = get_variable('max_brightness')
-    step = math.ceil(max_brightness / 10)
+    step_count = 20
+    step = math.ceil(max_brightness / step_count)
 
     if "brightnessup" in event:
         new_brightness = min(current_brightness + step, max_brightness)
@@ -40,7 +41,9 @@ def main():
 
     set_variable('brightness', new_brightness)
 
-    log(f"Event: {event}, Current: {current_brightness}, New: {new_brightness}, Args: {sys.argv}")
+    log(f"Event: {event}, Current: {current_brightness}, New: {new_brightness}, "
+        f"max: {max_brightness} step-count: {step_count}, step: {step}")
+
 
 
 if __name__ == "__main__":
