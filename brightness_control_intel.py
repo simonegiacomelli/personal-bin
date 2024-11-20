@@ -16,7 +16,6 @@ def set_variable(filename, value):
 
 
 def log(message):
-    """Write a message to the log file."""
     with open('/tmp/brightness.log', "a") as log:
         log.write(f"{datetime.now()} - {message}\n")
 
