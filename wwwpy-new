@@ -1,16 +1,44 @@
 #!/usr/bin/env python3
+import shutil
+import subprocess
+import sys
+import os
+import argparse
+from pathlib import Path
+
 
 def uv_available() -> bool:
-    pass
+    return shutil.which('uv') is not None
 
 
 def fail(msg: str):
     print(msg)
+    sys.exit(1)
 
+def setup(directory:Path):
+    os.chdir(directory)
+    subprocess.run(['uv', 'venv', '--python', '3.11'], check=True)
+    subprocess.run(['uv', 'pip', 'install', 'wwwpy'], check=True)
 
 def main():
+    uv_missing = "Error: 'uv' command not found in PATH"
     if not uv_available():
-        return fail('todo')
+        print(uv_missing)
+
+    parser = argparse.ArgumentParser(description="Check if 'uv' command is in PATH and validate directory")
+    parser.add_argument('directory', type=str, help="Directory to validate")
+    args = parser.parse_args()
+
+    directory = Path(args.directory)
+    if directory.exists():
+        fail(f'Error, the folder already exist: `{directory}`')
+
+    if not uv_available():
+        fail(uv_missing)
+
+    directory.mkdir()
+
+    setup(directory)
 
 
 if __name__ == '__main__':
