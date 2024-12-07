@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+import time
+
+from datetime import datetime
+from pathlib import Path
+
+stop_key = 'F11'
+print(f'Starting cnee recording, press {stop_key} to stop it.')
+
+video_dir = subprocess.check_output('xdg-user-dir VIDEOS'.split(' ')).decode().strip()
+dt = datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
+file = Path(video_dir) / f'{dt}.cnee'
+print('Starting recording in ', end='')
+for text in "3… 2… 1… \n":
+    print(text, end='', flush=True)
+    time.sleep(0.5)
+
+os.system(f'cnee --record --mouse --keyboard --stop-key {stop_key} -o {file}')
