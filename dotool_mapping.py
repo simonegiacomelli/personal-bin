@@ -1,4 +1,6 @@
-from pynput.keyboard import Key
+from __future__ import annotations
+
+from pynput.keyboard import Key, KeyCode
 
 from dotool_keys import DotoolKeys
 
@@ -45,6 +47,10 @@ key_mapping = {
     'media_next': 'nextsong',
     'print_screen': 'print',
 }
+
+
+def pynput_is_char(key: Key | KeyCode) -> bool:
+    return isinstance(key, KeyCode) and key.char
 
 
 def pynput_to_dotool_key(key: Key | str) -> str:

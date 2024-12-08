@@ -19,7 +19,9 @@ from pynput import keyboard
 from pynput.keyboard import KeyCode, Key
 
 from beeplib import beep
+from dotool_mapping import pynput_is_char
 from irplib import extension
+
 
 # print('Starting recording in ', end='')
 # for text in "3… 2… 1… \n":
@@ -55,6 +57,8 @@ stop_event = Event()
 
 
 def handler(prefix: str, *args):
+    if stop_event.is_set():
+        return
     global last_event
     now = event_time()
     delay = now - last_event
@@ -63,30 +67,40 @@ def handler(prefix: str, *args):
     append(f'{prefix},{join},{delay}')
 
 
-def kw(prefix: str):
-    def kh(key: Key | KeyCode):
-        if prefix == 'kp' and is_stop_key(key):
-            stop()
-            return
-        if isinstance(key, Key):
-            key = key.name
-        handler(prefix, key)
-
-    return kh
+def key_handle(prefix: str, key: Key | KeyCode):
+    if isinstance(key, Key):
+        key = key.name
+    handler(prefix, key)
 
 
-def stop():
+def key_press(key: Key | KeyCode):
+    if stop(key):
+        return
+    key_handle('kp', key)
+
+
+def key_release(key: Key | KeyCode):
+    if pynput_is_char(key):
+        return  # ignore chars released
+    key_handle('kr', key)
+
+
+def stop(key: Key | KeyCode) -> bool:
+    if not is_stop_key(key):
+        return False
+
     print(f'Stop key pressed, exiting...')
     keyboard_listener.stop()
     mouse_listener.stop()
     stop_event.set()
+    return True
 
 
 def mw(prefix: str):
     return partial(handler, prefix)
 
 
-keyboard_listener = keyboard.Listener(on_press=kw('kp'), on_release=kw('kr'))
+keyboard_listener = keyboard.Listener(on_press=key_press, on_release=key_release)
 mouse_listener = mouse.Listener(on_move=mw('mm'), on_click=mw('mc'), on_scroll=mw('ms'))
 
 
