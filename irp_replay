@@ -94,10 +94,9 @@ def main():
 
 
 def process_lines(f):
-    next(f)  # skip header
     for line in f:
         line = line.strip()
-        if not line:
+        if not line or line.startswith('#'):
             continue
         values = line.split(',')
         event_type = line[0]
