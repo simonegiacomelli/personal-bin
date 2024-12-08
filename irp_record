@@ -61,7 +61,7 @@ def handler(prefix: str, *args):
         return
     global last_event
     now = event_time()
-    delay = now - last_event
+    delay = round(now - last_event, 4)
     last_event = now
     join = ','.join(map(str, args))
     append(f'{prefix},{join},{delay}')
@@ -105,7 +105,8 @@ mouse_listener = mouse.Listener(on_move=mw('mm'), on_click=mw('mc'), on_scroll=m
 
 
 def start():
-    append('type,*args,delay_secs')
+    header_help = '#help kp: key press; kr: key release; mm: mouse move; mc: mouse click; ms: mouse scroll'
+    append(f'type,*args,delay_secs,{header_help}')
     keyboard_listener.start()
     mouse_listener.start()
     beep()
