@@ -41,7 +41,6 @@ def process_keyboard(line, values: list[str]):
     is_typing = key_str.startswith("'")
     if is_typing and not keydown:
         return  # ignore keyup
-    print(f'{line}', end='')
     if is_typing:
         key = key_str[1]
         key_contr.send(f'type {key}')
@@ -56,7 +55,6 @@ def process_keyboard(line, values: list[str]):
 
 
 def process_mouse(line, values: list[str]):
-    print(f'{line}', end='')
     event_type = values[0]
     if event_type == 'mm':
         x, y = map(int, values[1:3])
@@ -96,12 +94,13 @@ def main():
             event_type = line[0]
 
             delay_secs = float(values[-1])
-            print(f' delaying {delay_secs} seconds')
+            print(f' delay {round(delay_secs, 3)}')
             sleep(delay_secs)
 
             if stop_replay:
                 break
-
+            debug_line = ' '.join(values[:-1]).ljust(20)
+            print(f'{debug_line}', end='')
             if event_type == 'k':
                 process_keyboard(line, values)
             if event_type == 'm':

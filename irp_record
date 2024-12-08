@@ -21,10 +21,10 @@ from pynput.keyboard import KeyCode, Key
 from beeplib import beep
 from irplib import extension
 
-print('Starting recording in ', end='')
-for text in "3… 2… 1… \n":
-    print(text, end='', flush=True)
-    time.sleep(0.5)
+# print('Starting recording in ', end='')
+# for text in "3… 2… 1… \n":
+#     print(text, end='', flush=True)
+#     time.sleep(0.5)
 
 
 def is_stop_key(key: Key | KeyCode):
@@ -103,3 +103,4 @@ Thread(target=start, daemon=True).start()
 stop_event.wait()
 shutil.copyfile(file, last)
 print('Recording stopped.')
+beep()
