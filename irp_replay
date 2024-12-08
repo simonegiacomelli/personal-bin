@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from time import sleep
 
+from beeplib import beep
 from dotool_keys import DotoolKeys
 from dotool_mapping import pynput_to_dotool_key
 from irplib import get_video_path, extension
@@ -67,18 +68,19 @@ def process_mouse(line, values: list[str]):
         button = getattr(mouse.Button, button.removeprefix('Button.'))
         func = mouse_contr.press if pressed == 'True' else mouse_contr.release
         func(button)
-    elif event_type == 'ms': # mouse scroll
+    elif event_type == 'ms':  # mouse scroll
         x, y, dx, dy = map(int, values[1:5])
         mouse_contr.scroll(dx, dy)
     else:
         raise Exception(f'process_mouse skip: {line}')
 
 
-def main():
-    stop_replay = False
+stop_replay = False
 
+
+def main():
     def on_press(key):
-        nonlocal stop_replay
+        global stop_replay
         if key == Key.esc or key == Key.f11:
             print('esc pressed, exiting...')
             stop_replay = True
@@ -86,28 +88,35 @@ def main():
     keyboard.Listener(on_press=on_press).start()
 
     video_path = get_video_path() / f'last.{extension}'
-    # process line by line in lazy
+
     with open(video_path) as f:
-        next(f)  # skip header
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            values = line.split(',')
-            event_type = line[0]
+        process_lines(f)
 
-            delay_secs = float(values[-1])
-            print(f' delay {round(delay_secs, 3)}')
-            sleep(delay_secs)
 
-            if stop_replay:
-                break
-            debug_line = ' '.join(values[:-1]).ljust(20)
-            print(f'{debug_line}', end='')
-            if event_type == 'k':
-                process_keyboard(line, values)
-            if event_type == 'm':
-                process_mouse(line, values)
+def process_lines(f):
+    next(f)  # skip header
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue
+        values = line.split(',')
+        event_type = line[0]
+
+        delay_secs = float(values[-1])
+        print(f' delay {round(delay_secs, 3)}')
+        sleep(delay_secs)
+
+        if stop_replay:
+            break
+        debug_line = ' '.join(values[:-1]).ljust(20)
+        print(f'{debug_line}', end='')
+        if event_type == 'k':
+            process_keyboard(line, values)
+        if event_type == 'm':
+            process_mouse(line, values)
+
+    print('replay finished')
+    beep()
 
 
 if __name__ == '__main__':
