@@ -18,8 +18,8 @@ from pynput import mouse
 from pynput import keyboard
 from pynput.keyboard import KeyCode, Key
 
+from beeplib import beep
 from irplib import extension
-
 
 print('Starting recording in ', end='')
 for text in "3… 2… 1… \n":
@@ -90,6 +90,7 @@ def start():
     append('type,*args,delay_secs')
     keyboard_listener.start()
     mouse_listener.start()
+    beep()
     keyboard_listener.join()
     mouse_listener.join()
 
