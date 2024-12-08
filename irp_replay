@@ -32,7 +32,7 @@ class DotoolKeyboard:
         return key in self.dotool_keys.keys
 
 
-key_contr = DotoolKeyboard()
+dotool = DotoolKeyboard()
 mouse_contr = mouse.Controller()
 
 
@@ -44,15 +44,15 @@ def process_keyboard(line, values: list[str]):
         return  # ignore keyup
     if is_typing:
         key = key_str[1]
-        key_contr.send(f'type {key}')
+        dotool.send(f'type {key}')
     else:
         key = pynput_to_dotool_key(key_str)
-        if not key_contr.has_chord(key):
+        if not dotool.has_chord(key):
             print(f'unknown key: {key}')
             sys.exit(1)
         func = 'keydown' if keydown else 'keyup'
         line = f'{func} {key}'
-        key_contr.send(line)
+        dotool.send(line)
 
 
 def process_mouse(line, values: list[str]):
@@ -95,9 +95,18 @@ def main():
 
 def process_lines(f):
     for line in f:
+        if stop_replay:
+            break
         line = line.strip()
         if not line or line.startswith('#'):
             continue
+        if line.startswith('dt '):
+            dotool.send(line[3:])
+            continue
+        if line.startswith('sleep '):
+            sleep(float(line[6:]))
+            continue
+
         values = line.split(',')
         event_type = line[0]
 
