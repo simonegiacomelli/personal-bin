@@ -67,6 +67,9 @@ def process_mouse(line, values: list[str]):
         button = getattr(mouse.Button, button.removeprefix('Button.'))
         func = mouse_contr.press if pressed == 'True' else mouse_contr.release
         func(button)
+    elif event_type == 'ms': # mouse scroll
+        x, y, dx, dy = map(int, values[1:5])
+        mouse_contr.scroll(dx, dy)
     else:
         raise Exception(f'process_mouse skip: {line}')
 
