@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run -v -s
+#!/usr/bin/env -S uv run -s
 # /// script
 # requires-python = "==3.11.10"
 # dependencies = ["pynput"]

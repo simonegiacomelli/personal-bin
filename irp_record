@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run -v -s
+#!/usr/bin/env -S uv run -s
 # /// script
 # requires-python = "==3.11.10"
 # dependencies = ["pynput"]
@@ -26,8 +26,13 @@ for text in "3… 2… 1… \n":
     print(text, end='', flush=True)
     time.sleep(0.5)
 
-stop_key = 'F11'
-print(f'Starting irp_record.py, press {stop_key} to stop it.')
+
+def is_stop_key(key: Key | KeyCode):
+    media4 = '<269025089>'
+    return key == Key.f11 or str(key) == media4
+
+
+print(f'Starting irp_record.py, press F11 or Media4 to stop it.')
 
 video_dir = subprocess.check_output('xdg-user-dir VIDEOS'.split(' ')).decode().strip()
 dt = datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
@@ -60,9 +65,8 @@ def handler(prefix: str, *args):
 
 def kw(prefix: str):
     def kh(key: Key | KeyCode):
-        if key == Key.f11:
-            if prefix == 'kp':
-                stop()
+        if prefix == 'kp' and is_stop_key(key):
+            stop()
             return
         if isinstance(key, Key):
             key = key.name
@@ -72,7 +76,7 @@ def kw(prefix: str):
 
 
 def stop():
-    print(f'{stop_key} pressed, exiting...')
+    print(f'Stop key pressed, exiting...')
     keyboard_listener.stop()
     mouse_listener.stop()
     stop_event.set()
