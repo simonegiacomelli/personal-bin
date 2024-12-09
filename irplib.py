@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
+import random
 import shlex
 import subprocess
 from pathlib import Path
+from time import sleep
 
 
 def get_video_path() -> Path:
@@ -18,4 +21,29 @@ class Line:
         self.args = all_args[1:]
 
 
+def text_parse(text):
+    dec_text = json.loads(f'"{text}"')
+    return dec_text
+
+
+def human_delay():
+    mean_delay = 0.1  # mean delay in seconds
+    std_dev = 0.02  # standard deviation in seconds
+    delay = abs(random.normalvariate(mean_delay, std_dev))
+    return delay
+
+
 extension = 'irp'
+
+
+def main():
+    text = 'cd $(mktemp -d demo-XXX)'
+    for c in text:
+        print(c, end='', flush=True)
+        delay = human_delay()
+        sleep(delay)
+    print()
+
+
+if __name__ == '__main__':
+    main()

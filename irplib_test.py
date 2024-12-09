@@ -1,6 +1,6 @@
 import shlex
 
-from irplib import Line
+from irplib import Line, text_parse
 
 
 def test_comment1():
@@ -54,3 +54,8 @@ def test_kp_altgr():
     assert line.ignore is False
     assert line.command == 'kp'
     assert line.args == ['0.1881', '<65312>']
+
+
+def test_text_parse():
+    assert text_parse('cd $(mktemp -d demo-XXX)') == 'cd $(mktemp -d demo-XXX)'
+    assert text_parse('ls\\n') == 'ls\n'
