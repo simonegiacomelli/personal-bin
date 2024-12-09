@@ -45,7 +45,10 @@ print(f'Starting irp_record.py, press F11 or Media4 to stop it.')
 video_dir = subprocess.check_output('xdg-user-dir VIDEOS'.split(' ')).decode().strip()
 dt = dt_str()
 video_path = Path(video_dir)
-file = video_path / f'{dt}.{extension}'
+irp_record_path = video_path / 'irp-record'
+irp_record_path.mkdir(exist_ok=True)
+
+file = irp_record_path / f'{dt}.{extension}'
 last = video_path / f'last.{extension}'
 
 file.touch(exist_ok=False)
@@ -59,7 +62,7 @@ def backup_file(path: Path):
         return
     ctime = path.stat().st_ctime
     ctime_str = datetime.fromtimestamp(ctime).strftime('%Y-%m-%d--%H-%M-%S')
-    backup = path.with_name(f'{path.stem}--{ctime_str}{path.suffix}')
+    backup = irp_record_path / f'{path.stem}--{ctime_str}{path.suffix}'
     shutil.copyfile(last, backup)
 
 
