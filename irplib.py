@@ -91,3 +91,21 @@ class Human:
 
 
 extension = 'irp'
+
+
+class SmartSeparator:
+
+    def __init__(self):
+        self.tuple = ('', '')
+        self._last = None
+
+    def process(self, command: str):
+        same = command == self._last
+        if same:
+            self.tuple = ('\t', '')
+        else:
+            if self._last:
+                self.tuple = ('\n', '')
+
+        self._last = command
+        return self.tuple

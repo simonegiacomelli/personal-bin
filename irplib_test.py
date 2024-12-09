@@ -1,6 +1,6 @@
 import shlex
 
-from irplib import Line, text_parse
+from irplib import Line, text_parse, SmartSeparator
 
 
 def test_comment1():
@@ -59,3 +59,23 @@ def test_kp_altgr():
 def test_text_parse():
     assert text_parse('cd $(mktemp -d demo-XXX)') == 'cd $(mktemp -d demo-XXX)'
     assert text_parse('ls\\n') == 'ls\n'
+
+
+class TestSmartSeparator:
+
+    def test_initial(self):
+        target = SmartSeparator()
+        target.process('mm')
+        assert ('', '') == target.tuple
+
+    def test_add(self):
+        target = SmartSeparator()
+        target.process('mm')
+        target.process('mm')
+        assert ('\t', '') == target.tuple
+
+    def test_add2(self):
+        target = SmartSeparator()
+        target.process('mm')
+        target.process('mc')
+        assert ('\n', '') == target.tuple

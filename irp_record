@@ -10,25 +10,19 @@ import shlex
 import shutil
 import subprocess
 import sys
-from datetime import datetime
 import time
+from datetime import datetime
 from functools import partial
 from pathlib import Path
 from threading import Thread, Event
 
-from pynput import mouse
 from pynput import keyboard
+from pynput import mouse
 from pynput.keyboard import KeyCode, Key
 
 from beeplib import beep
 from dotool_mapping import pynput_is_char
-from irplib import extension
-
-
-# print('Starting recording in ', end='')
-# for text in "3… 2… 1… \n":
-#     print(text, end='', flush=True)
-#     time.sleep(0.5)
+from irplib import extension, SmartSeparator
 
 
 def is_stop_key(key: Key | KeyCode):
@@ -48,13 +42,32 @@ video_path = Path(video_dir)
 irp_record_path = video_path / 'irp-record'
 irp_record_path.mkdir(exist_ok=True)
 
-file = irp_record_path / f'{dt}.{extension}'
+rec_file = irp_record_path / f'{dt}.{extension}'
 last = video_path / f'last.{extension}'
 
-file.touch(exist_ok=False)
+rec_file.touch(exist_ok=False)
 
 event_time = time.monotonic
 last_event = event_time()
+
+
+class File:
+    def __init__(self, path: Path):
+        self.path = path
+        self.smart_separator = SmartSeparator()
+
+    def append_raw(self, text: str):
+        with open(self.path, 'a') as f:
+            f.write(text)
+        print(text, end='', flush=True)
+
+    def append_command(self, command: str, delay: str, join: str):
+        pre, pos = self.smart_separator.process(command)
+        cmd_str = f'{pre}{command} {delay} {join}{pos}'
+        self.append_raw(cmd_str)
+
+
+file = File(rec_file)
 
 
 def backup_file(path: Path):
@@ -64,12 +77,6 @@ def backup_file(path: Path):
     ctime_str = datetime.fromtimestamp(ctime).strftime('%Y-%m-%d--%H-%M-%S')
     backup = irp_record_path / f'{path.stem}--{ctime_str}{path.suffix}'
     shutil.copyfile(last, backup)
-
-
-def append_raw(text: str):
-    with open(file, 'a') as f:
-        f.write(text)
-    print(text, end='')
 
 
 stop_event = Event()
@@ -83,7 +90,7 @@ def append_command(command: str, *args):
     delay = str(round(now - last_event, 4)).ljust(8)
     last_event = now
     join = shlex.join(map(str, args))
-    append_raw(f'{command} {delay} {join}\n')
+    file.append_command(command, delay, join)
 
 
 def key_handle(prefix: str, key: Key | KeyCode):
@@ -127,7 +134,7 @@ mouse_listener = mouse.Listener(on_move=mw('mm'), on_click=mw('mc'), on_scroll=m
 
 
 def start():
-    append_raw(f'# irp_record {dt}\n')
+    file.append_raw(f'# irp_record {dt}\n')
     keyboard_listener.start()
     mouse_listener.start()
     beep()
@@ -138,13 +145,13 @@ def start():
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'append':
         if last.exists():
-            shutil.copyfile(last, file)
-            append_raw('\n')
+            shutil.copyfile(last, file.path)
+            file.append_raw('\n')
 
     Thread(target=start, daemon=True).start()
     stop_event.wait()
     backup_file(last)
-    shutil.copyfile(file, last)
+    shutil.copyfile(file.path, last)
 
     print('Recording stopped.')
     beep()
