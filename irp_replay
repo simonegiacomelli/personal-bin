@@ -29,11 +29,18 @@ class DotoolKeyboard:
         self.process.stdin.flush()
 
     def type_char(self, char: str):
-        """
-        *will* means not implemented yet.
-        The function *will* take care if the char is a special char, e.g., '\n' or '\t' or the backspace char.
-        """
-        self.send(f'type {char}')
+        mapping = {
+            '\n': 'enter',
+            '\t': 'tab',
+            '\b': 'backspace',
+            '\x1b': 'esc',
+            '\x7f': 'delete',
+        }
+        special = mapping.get(char, None)
+        if special:
+            self.send(f'key {special}')
+        else:
+            self.send(f'type {char}')
 
     def has_chord(self, key: str):
         return key in self.dotool_keys.keys
@@ -102,6 +109,8 @@ def human_type(text: str):
     """:text: will be wrapped with double quote and decoded as json"""
     dec_text = text_parse(text)
     for char in dec_text:
+        if stop_replay:
+            break
         dotool.type_char(char)
         sleep(human_delay())
 
