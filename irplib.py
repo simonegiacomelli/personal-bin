@@ -6,6 +6,7 @@ import shlex
 import subprocess
 from pathlib import Path
 from time import sleep
+from typing import NamedTuple
 
 
 def get_video_path() -> Path:
@@ -26,12 +27,17 @@ def text_parse(text):
     return dec_text
 
 
-def human_delay(after_char: str = None):
-    normal = (0.08, 0.3)
-    long = (0.5, 1.5)
-    min_delay, max_delay = normal if after_char != '\n' else long
-    delay = abs(random.uniform(min_delay, max_delay))
-    return delay
+class HumanDelay(NamedTuple):
+    normal_char: (float, float)
+    long_char: (float, float)
+
+
+default_delay = HumanDelay((0.08, 0.3), (0.5, 1.5))
+
+
+def human_delay(after_char: str = None, delay: HumanDelay = default_delay) -> float:
+    d = delay.long_char if after_char == '\n' else delay.normal_char
+    return abs(random.uniform(*d))
 
 
 def mark_last(iterable) -> (any, bool):
@@ -52,17 +58,36 @@ def mark_last(iterable) -> (any, bool):
     yield prev, True
 
 
+class Human:
+    def __init__(self, dotool, stop_replay: callable):
+        self.dotool = dotool
+        self.stop_replay = stop_replay
+        self.delay = default_delay
+
+    def type(self, text):
+        """:text: will be wrapped with double quote and decoded as json"""
+        dec_text = text_parse(text)
+        for char in dec_text:
+            if self.stop_replay():
+                break
+            self.dotool.type_char(char)
+            sleep(human_delay(char, self.delay))
+
+    def process_line(self, line: Line):
+        args = line.args
+        cmd = args[0]
+        if cmd == 'type':
+            text = line.line.split(' ', 2)[2]
+            self.type(text)
+        if cmd == 'delay':
+            if args[1] == 'default':
+                self.delay = default_delay
+            elif args[1] == 'fast':
+                self.delay = HumanDelay((0, 0), (0.3, 0.3))
+            else:
+                raise Exception(f'unknown delay: {args[1]} ~~ {line.line}')
+        else:
+            print(f'unknown command: {line.line}')
+
+
 extension = 'irp'
-
-
-def main():
-    text = 'cd $(mktemp -d demo-XXX)'
-    for c in text:
-        print(c, end='', flush=True)
-        delay = human_delay(c)
-        sleep(delay)
-    print()
-
-
-if __name__ == '__main__':
-    main()

@@ -14,7 +14,7 @@ from pynput.keyboard import Key
 from beeplib import beep
 from dotool_lib import DotoolKeyboard
 from dotool_mapping import pynput_to_dotool_key
-from irplib import get_video_path, extension, Line, human_delay, text_parse, mark_last
+from irplib import get_video_path, extension, Line, human_delay, text_parse, mark_last, Human
 
 dotool = DotoolKeyboard()
 mouse_contr = mouse.Controller()
@@ -59,7 +59,7 @@ def main():
     def on_press(key):
         global stop_replay
         if key == Key.esc or key == Key.f11:
-            print('esc pressed, exiting...')
+            print('Stop pressed, exiting...')
             stop_replay = True
 
     keyboard.Listener(on_press=on_press).start()
@@ -70,14 +70,7 @@ def main():
         process_lines(f)
 
 
-def human_type(text: str):
-    """:text: will be wrapped with double quote and decoded as json"""
-    dec_text = text_parse(text)
-    for char in dec_text:
-        if stop_replay:
-            break
-        dotool.type_char(char)
-        sleep(human_delay(char))
+human = Human(dotool, lambda: stop_replay)
 
 
 def process_lines(f):
@@ -95,8 +88,8 @@ def process_lines(f):
         if command == 'sleep':
             sleep(float(line.args[0]))
             continue
-        if command == 'htype':
-            human_type(line.line[6:])
+        if command == 'human':
+            human.process_line(line)
             continue
 
         if not last_line:
