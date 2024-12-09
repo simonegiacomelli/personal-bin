@@ -66,10 +66,10 @@ def backup_file(path: Path):
     shutil.copyfile(last, backup)
 
 
-def append(line: str):
+def append_raw(text: str):
     with open(file, 'a') as f:
-        f.write(line + '\n')
-    print(line)
+        f.write(text)
+    print(text, end='')
 
 
 stop_event = Event()
@@ -83,7 +83,7 @@ def append_command(command: str, *args):
     delay = str(round(now - last_event, 4)).ljust(8)
     last_event = now
     join = shlex.join(map(str, args))
-    append(f'{command} {delay} {join}')
+    append_raw(f'{command} {delay} {join}\n')
 
 
 def key_handle(prefix: str, key: Key | KeyCode):
@@ -127,7 +127,7 @@ mouse_listener = mouse.Listener(on_move=mw('mm'), on_click=mw('mc'), on_scroll=m
 
 
 def start():
-    append(f'# irp_record {dt}')
+    append_raw(f'# irp_record {dt}\n')
     keyboard_listener.start()
     mouse_listener.start()
     beep()
@@ -139,7 +139,7 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'append':
         if last.exists():
             shutil.copyfile(last, file)
-            append('')
+            append_raw('\n')
 
     Thread(target=start, daemon=True).start()
     stop_event.wait()

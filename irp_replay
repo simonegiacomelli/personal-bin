@@ -114,7 +114,7 @@ def process_line(line: Line):
     if command in {'kp', 'kr', 'kc'}:
         process_keyboard(line)
     elif command in {'mm', 'mc', 'ms'}:
-        print(f'{line_str}', end='')
+        print(f'{line.line}', end='')
         process_mouse(line)
     else:
         print(f'Unknown command: {command}')
