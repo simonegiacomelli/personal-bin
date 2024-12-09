@@ -12,44 +12,9 @@ from pynput import keyboard, mouse
 from pynput.keyboard import Key
 
 from beeplib import beep
-from dotool_keys import DotoolKeys
+from dotool_lib import DotoolKeyboard
 from dotool_mapping import pynput_to_dotool_key
-from irplib import get_video_path, extension, Line, human_delay, text_parse
-
-
-class DotoolKeyboard:
-
-    def __init__(self):
-        self.process = subprocess.Popen(['dotool'], stdin=subprocess.PIPE, text=True)
-        self.dotool_keys = DotoolKeys()
-
-    def send(self, line: str):
-        # print(f'dotool: {line}')
-        self.process.stdin.write(f'{line}\n')
-        self.process.stdin.flush()
-
-    def type_char(self, char: str):
-        mapping = {
-            '\n': 'enter',
-            '\t': 'tab',
-            '\b': 'backspace',
-            '\x1b': 'esc',
-            '\x7f': 'delete',
-        }
-        special = mapping.get(char, None)
-        if special:
-            self.send(f'key {special}')
-        else:
-            self.send(f'type {char}')
-
-    def has_chord(self, key: str):
-        return key in self.dotool_keys.keys
-
-    def exit_if_unrecognized(self, key: str):
-        if not self.has_chord(key):
-            print(f'unknown key: {key}')
-            sys.exit(1)
-
+from irplib import get_video_path, extension, Line, human_delay, text_parse, mark_last
 
 dotool = DotoolKeyboard()
 mouse_contr = mouse.Controller()
@@ -116,7 +81,7 @@ def human_type(text: str):
 
 
 def process_lines(f):
-    for line_str in f:
+    for line_str, last_line in mark_last(f):
         line_str = line_str.strip('\n')
         if stop_replay:
             break
@@ -134,9 +99,10 @@ def process_lines(f):
             human_type(line.line[6:])
             continue
 
-        delay_secs = float(line.args[0])
-        print(f' delay {delay_secs}')
-        sleep(delay_secs)
+        if not last_line:
+            delay_secs = float(line.args[0])
+            print(f' delay {delay_secs}')
+            sleep(delay_secs)
 
         if stop_replay:
             break

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pynput.keyboard import Key, KeyCode
 
-from dotool_keys import DotoolKeys
+from dotool_lib import DotoolKeys
 
 # Key.alt_r
 # Key.alt_gr

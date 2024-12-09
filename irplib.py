@@ -34,6 +34,24 @@ def human_delay(after_char: str = None):
     return delay
 
 
+def mark_last(iterable) -> (any, bool):
+    """
+    A generator function that takes an iterable and yields (item, is_last)
+    where is_last is True only for the last item of the iterable.
+    """
+    it = iter(iterable)
+    try:
+        prev = next(it)  # Start by reading the first element
+    except StopIteration:
+        return
+
+    for item in it:
+        yield prev, False  # 'prev' is not the last because we have more items ahead
+        prev = item
+
+    yield prev, True
+
+
 extension = 'irp'
 
 
