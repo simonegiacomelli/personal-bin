@@ -112,7 +112,7 @@ def human_type(text: str):
         if stop_replay:
             break
         dotool.type_char(char)
-        sleep(human_delay())
+        sleep(human_delay(char))
 
 
 def process_lines(f):

@@ -26,10 +26,11 @@ def text_parse(text):
     return dec_text
 
 
-def human_delay():
-    mean_delay = 0.1  # mean delay in seconds
-    std_dev = 0.02  # standard deviation in seconds
-    delay = abs(random.normalvariate(mean_delay, std_dev))
+def human_delay(after_char: str = None):
+    normal = (0.08, 0.3)
+    long = (0.5, 1.5)
+    min_delay, max_delay = normal if after_char != '\n' else long
+    delay = abs(random.uniform(min_delay, max_delay))
     return delay
 
 
@@ -40,7 +41,7 @@ def main():
     text = 'cd $(mktemp -d demo-XXX)'
     for c in text:
         print(c, end='', flush=True)
-        delay = human_delay()
+        delay = human_delay(c)
         sleep(delay)
     print()
 

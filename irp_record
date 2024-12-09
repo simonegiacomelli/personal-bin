@@ -110,6 +110,7 @@ mouse_listener = mouse.Listener(on_move=mw('mm'), on_click=mw('mc'), on_scroll=m
 
 
 def start():
+    append(f'# irp_record {dt}')
     keyboard_listener.start()
     mouse_listener.start()
     beep()
@@ -120,5 +121,6 @@ def start():
 Thread(target=start, daemon=True).start()
 stop_event.wait()
 shutil.copyfile(file, last)
+
 print('Recording stopped.')
 beep()
