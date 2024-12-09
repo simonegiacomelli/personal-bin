@@ -36,10 +36,14 @@ def is_stop_key(key: Key | KeyCode):
     return key == Key.f11 or str(key) == media4
 
 
+def dt_str():
+    return datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
+
+
 print(f'Starting irp_record.py, press F11 or Media4 to stop it.')
 
 video_dir = subprocess.check_output('xdg-user-dir VIDEOS'.split(' ')).decode().strip()
-dt = datetime.now().strftime('%Y-%m-%d--%H-%M-%S')
+dt = dt_str()
 video_path = Path(video_dir)
 file = video_path / f'{dt}.{extension}'
 last = video_path / f'last.{extension}'
@@ -48,6 +52,15 @@ file.touch(exist_ok=False)
 
 event_time = time.monotonic
 last_event = event_time()
+
+
+def backup_file(path: Path):
+    if not path.exists():
+        return
+    ctime = path.stat().st_ctime
+    ctime_str = datetime.fromtimestamp(ctime).strftime('%Y-%m-%d--%H-%M-%S')
+    backup = path.with_name(f'{path.stem}--{ctime_str}{path.suffix}')
+    shutil.copyfile(last, backup)
 
 
 def append(line: str):
@@ -127,7 +140,7 @@ def main():
 
     Thread(target=start, daemon=True).start()
     stop_event.wait()
-
+    backup_file(last)
     shutil.copyfile(file, last)
 
     print('Recording stopped.')

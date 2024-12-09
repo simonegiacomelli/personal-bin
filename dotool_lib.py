@@ -17,9 +17,9 @@ class DotoolKeyboard:
         self.process = subprocess.Popen(['dotool'], stdin=subprocess.PIPE, text=True)
         self.dotool_keys = DotoolKeys()
 
-    def send(self, line: str):
+    def send(self, dotool_command: str):
         # print(f'dotool: {line}')
-        self.process.stdin.write(f'{line}\n')
+        self.process.stdin.write(f'{dotool_command}\n')
         self.process.stdin.flush()
 
     def type_char(self, char: str):

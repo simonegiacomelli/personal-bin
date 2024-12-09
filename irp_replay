@@ -30,7 +30,9 @@ def process_keyboard(line: Line):
         func = 'keydown' if command == 'kp' else 'keyup'
         key = pynput_to_dotool_key(key_str)
         dotool.exit_if_unrecognized(key)
-        dotool.send(f'{func} {key}')
+        dotool_command = f'{func.ljust(7)} {key.ljust(20)}'
+        print(dotool_command, end='')
+        dotool.send(dotool_command)
 
 
 def process_mouse(line: Line):
@@ -82,8 +84,8 @@ def process_lines(f):
         if line.ignore:
             continue
         command = line.command
-        if command == 'dt' or command == 'dotool':
-            dotool.send(line.line[3:])
+        if command == 'dotool':
+            dotool.send(line.line[7:])
             continue
         if command == 'sleep':
             sleep(float(line.args[0]))
@@ -96,17 +98,22 @@ def process_lines(f):
             delay_secs = float(line.args[0])
             print(f' delay {delay_secs}')
             sleep(delay_secs)
+        else:
+            print()
 
         if stop_replay:
             break
 
-        print(f'{line_str}', end='')
         if command in {'kp', 'kr', 'kc'}:
             process_keyboard(line)
-        if command in {'mm', 'mc', 'ms'}:
+        elif command in {'mm', 'mc', 'ms'}:
+            print(f'{line_str}', end='')
             process_mouse(line)
-
-    print('replay finished')
+        else:
+            print(f'Unknown command: {command}')
+            break
+    print()
+    print('replay terminated')
     beep()
 
 
