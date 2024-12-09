@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import shlex
 import shutil
 import subprocess
 from datetime import datetime
@@ -51,32 +52,36 @@ last_event = event_time()
 def append(line: str):
     with open(file, 'a') as f:
         f.write(line + '\n')
+    print(line)
 
 
 stop_event = Event()
 
 
-def handler(prefix: str, *args):
+def append_command(command: str, *args):
     if stop_event.is_set():
         return
     global last_event
     now = event_time()
-    delay = round(now - last_event, 4)
+    delay = str(round(now - last_event, 4)).ljust(8)
     last_event = now
-    join = ','.join(map(str, args))
-    append(f'{prefix},{join},{delay}')
+    join = shlex.join(map(str, args))
+    append(f'{command} {delay} {join}')
 
 
 def key_handle(prefix: str, key: Key | KeyCode):
     if isinstance(key, Key):
         key = key.name
-    handler(prefix, key)
+    append_command(prefix, key)
 
 
 def key_press(key: Key | KeyCode):
     if stop(key):
         return
-    key_handle('kp', key)
+    if pynput_is_char(key):
+        append_command('kc', key.char)
+    else:
+        key_handle('kp', key)
 
 
 def key_release(key: Key | KeyCode):
@@ -97,7 +102,7 @@ def stop(key: Key | KeyCode) -> bool:
 
 
 def mw(prefix: str):
-    return partial(handler, prefix)
+    return partial(append_command, prefix)
 
 
 keyboard_listener = keyboard.Listener(on_press=key_press, on_release=key_release)
@@ -105,8 +110,6 @@ mouse_listener = mouse.Listener(on_move=mw('mm'), on_click=mw('mc'), on_scroll=m
 
 
 def start():
-    append('# help kp: key press; kr: key release; mm: mouse move; mc: mouse click; ms: mouse scroll')
-    append('# type,*args,delay_secs')
     keyboard_listener.start()
     mouse_listener.start()
     beep()

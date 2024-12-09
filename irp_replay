@@ -12,7 +12,7 @@ from time import sleep
 from beeplib import beep
 from dotool_keys import DotoolKeys
 from dotool_mapping import pynput_to_dotool_key
-from irplib import get_video_path, extension
+from irplib import get_video_path, extension, Line
 
 from pynput.keyboard import Key
 from pynput import keyboard, mouse
@@ -25,38 +25,37 @@ class DotoolKeyboard:
         self.dotool_keys = DotoolKeys()
 
     def send(self, line: str):
+        print(f'dotool: {line}')
         self.process.stdin.write(f'{line}\n')
         self.process.stdin.flush()
 
     def has_chord(self, key: str):
         return key in self.dotool_keys.keys
 
+    def exit_if_unrecognized(self, key: str):
+        if not self.has_chord(key):
+            print(f'unknown key: {key}')
+            sys.exit(1)
+
 
 dotool = DotoolKeyboard()
 mouse_contr = mouse.Controller()
 
 
-def process_keyboard(line, values: list[str]):
-    key_str = values[1]
-    keydown = values[0][1] == 'p'
-    is_typing = key_str.startswith("'")
-    if is_typing and not keydown:
-        return  # ignore keyup
-    if is_typing:
-        key = key_str[1]
-        dotool.send(f'type {key}')
+def process_keyboard(line: Line):
+    command = line.command
+    key_str = line.args[1]  # args[0] is delay
+    if command == 'kc':
+        dotool.send(f'type {key_str}')
     else:
+        func = 'keydown' if command == 'kp' else 'keyup'
         key = pynput_to_dotool_key(key_str)
-        if not dotool.has_chord(key):
-            print(f'unknown key: {key}')
-            sys.exit(1)
-        func = 'keydown' if keydown else 'keyup'
-        line = f'{func} {key}'
-        dotool.send(line)
+        dotool.exit_if_unrecognized(key)
+        dotool.send(f'{func} {key}')
 
 
-def process_mouse(line, values: list[str]):
-    event_type = values[0]
+def process_mouse(line: Line):
+    event_type = line.command
     if event_type == 'mm':
         x, y = map(int, values[1:3])
         mouse_contr.position = (x, y)
@@ -94,34 +93,32 @@ def main():
 
 
 def process_lines(f):
-    for line in f:
+    for line_str in f:
         if stop_replay:
             break
-        line = line.strip()
-        if not line or line.startswith('#'):
+        line = Line(line_str)
+        if line.ignore:
             continue
-        if line.startswith('dt '):
-            dotool.send(line[3:])
+        command = line.command
+        if command == 'dt':
+            dotool.send(line.line[3:])
             continue
-        if line.startswith('sleep '):
-            sleep(float(line[6:]))
+        if command == 'sleep':
+            sleep(float(line.args[0]))
             continue
 
-        values = line.split(',')
-        event_type = line[0]
-
-        delay_secs = float(values[-1])
-        print(f' delay {round(delay_secs, 3)}')
+        delay_secs = float(line.args[0])
+        print(f' delay {delay_secs}')
         sleep(delay_secs)
 
         if stop_replay:
             break
-        debug_line = ' '.join(values[:-1]).ljust(20)
-        print(f'{debug_line}', end='')
-        if event_type == 'k':
-            process_keyboard(line, values)
-        if event_type == 'm':
-            process_mouse(line, values)
+
+        print(f'{line_str}', end='')
+        if command in {'kp', 'kr', 'kc'}:
+            process_keyboard(line)
+        if command in {'mm', 'mc', 'ms'}:
+            process_mouse(line)
 
     print('replay finished')
     beep()
