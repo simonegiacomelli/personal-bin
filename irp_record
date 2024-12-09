@@ -9,6 +9,7 @@ from __future__ import annotations
 import shlex
 import shutil
 import subprocess
+import sys
 from datetime import datetime
 import time
 from functools import partial
@@ -118,9 +119,20 @@ def start():
     mouse_listener.join()
 
 
-Thread(target=start, daemon=True).start()
-stop_event.wait()
-shutil.copyfile(file, last)
+def main():
+    if len(sys.argv) > 1 and sys.argv[1] == 'append':
+        if last.exists():
+            shutil.copyfile(last, file)
+            append('')
 
-print('Recording stopped.')
-beep()
+    Thread(target=start, daemon=True).start()
+    stop_event.wait()
+
+    shutil.copyfile(file, last)
+
+    print('Recording stopped.')
+    beep()
+
+
+if __name__ == '__main__':
+    main()
