@@ -54,25 +54,37 @@ def process_mouse(line: Line):
         raise Exception(f'process_mouse skip: {line}')
 
 
-abort_replay = False
+class Replay:
+    def __init__(self):
+        self._aborted = False
+        self.line_index = 0
+
+    def abort(self, msg):
+        print(f'\n{msg}')
+        print(f'Aborted at line index: {self.line_index}')
+        self._aborted = True
+
+    @property
+    def aborted(self):
+        return self._aborted
+
+
+replay = Replay()
 
 
 def main():
-    global abort_replay
-
     def on_press(key):
-        global abort_replay
         if key == Key.esc or key == Key.f11:
-            print('Stop pressed, aborting...')
-            abort_replay = True
+            replay.abort('Stop pressed, aborting...')
 
     keyboard.Listener(on_press=on_press).start()
 
     video_path = get_video_path() / f'last.{extension}'
-
+    line_index = 0
     with open(video_path) as f:
         for line_str in f:
-            if abort_replay:
+            replay.line_index += 1
+            if replay.aborted:
                 break
             line_str = line_str.strip('\n')
             if line_str.lstrip().startswith('#'):
@@ -81,21 +93,20 @@ def main():
             for cmd in multi:
                 line = Line(cmd)
                 process_line(line)
-                if abort_replay:
+                if replay.aborted:
                     break
     print()
     print('Replay terminated')
     beep()
 
-    if abort_replay:
+    if replay.aborted:
         sys.exit(1)
 
 
-human = Human(dotool, lambda: abort_replay)
+human = Human(dotool, lambda: replay.aborted)
 
 
 def process_line(line: Line):
-    global abort_replay
     if line.ignore:
         return
     command = line.command
@@ -113,7 +124,7 @@ def process_line(line: Line):
     print(f' delay {delay_secs}')
     sleep(delay_secs)
 
-    if abort_replay:
+    if replay.aborted:
         return
 
     if command in {'kp', 'kr', 'kc'}:
@@ -122,8 +133,7 @@ def process_line(line: Line):
         print(f'{line.line}', end='')
         process_mouse(line)
     else:
-        print(f'Unknown command: {command}')
-        abort_replay = True
+        replay.abort(f'Unknown command: {command}')
 
 
 if __name__ == '__main__':
