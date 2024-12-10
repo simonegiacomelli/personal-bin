@@ -9,3 +9,5 @@ def beep():
         print('sudo apt-get install sox')
 
 
+if __name__ == '__main__':
+    beep()

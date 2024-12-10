@@ -54,17 +54,17 @@ def process_mouse(line: Line):
         raise Exception(f'process_mouse skip: {line}')
 
 
-stop_replay = False
+abort_replay = False
 
 
 def main():
-    global stop_replay
+    global abort_replay
 
     def on_press(key):
-        global stop_replay
+        global abort_replay
         if key == Key.esc or key == Key.f11:
-            print('Stop pressed, exiting...')
-            stop_replay = True
+            print('Stop pressed, aborting...')
+            abort_replay = True
 
     keyboard.Listener(on_press=on_press).start()
 
@@ -72,6 +72,8 @@ def main():
 
     with open(video_path) as f:
         for line_str in f:
+            if abort_replay:
+                break
             line_str = line_str.strip('\n')
             if line_str.lstrip().startswith('#'):
                 continue
@@ -79,18 +81,21 @@ def main():
             for cmd in multi:
                 line = Line(cmd)
                 process_line(line)
-                if stop_replay:
+                if abort_replay:
                     break
-        print()
-        print('replay terminated')
-        beep()
+    print()
+    print('Replay terminated')
+    beep()
+
+    if abort_replay:
+        sys.exit(1)
 
 
-human = Human(dotool, lambda: stop_replay)
+human = Human(dotool, lambda: abort_replay)
 
 
 def process_line(line: Line):
-    global stop_replay
+    global abort_replay
     if line.ignore:
         return
     command = line.command
@@ -108,7 +113,7 @@ def process_line(line: Line):
     print(f' delay {delay_secs}')
     sleep(delay_secs)
 
-    if stop_replay:
+    if abort_replay:
         return
 
     if command in {'kp', 'kr', 'kc'}:
@@ -118,7 +123,7 @@ def process_line(line: Line):
         process_mouse(line)
     else:
         print(f'Unknown command: {command}')
-        stop_replay = True
+        abort_replay = True
 
 
 if __name__ == '__main__':
