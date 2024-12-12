@@ -79,7 +79,7 @@ class Human:
         if cmd == 'type':
             text = line.line.split(' ', 2)[2]
             self.type(text)
-        if cmd == 'delay':
+        elif cmd == 'delay':
             if args[1] == 'default':
                 self.delay = default_delay
             elif args[1] == 'fast':
