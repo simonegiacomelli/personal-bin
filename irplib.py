@@ -90,7 +90,7 @@ class Human:
             print(f'unknown command: {line.line}')
 
 
-extension = 'irp'
+extension = 'cfg'
 
 
 class SmartSeparator:

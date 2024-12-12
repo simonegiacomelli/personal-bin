@@ -80,14 +80,13 @@ def main():
     keyboard.Listener(on_press=on_press).start()
 
     video_path = get_video_path() / f'last.{extension}'
-    line_index = 0
     with open(video_path) as f:
         for line_str in f:
             replay.line_index += 1
             if replay.aborted:
                 break
             line_str = line_str.strip('\n')
-            if line_str.lstrip().startswith('#'):
+            if is_comment(line_str):
                 continue
             multi = line_str.split('\t')
             for cmd in multi:
@@ -101,6 +100,11 @@ def main():
 
     if replay.aborted:
         sys.exit(1)
+
+
+def is_comment(line_str):
+    s = line_str.lstrip()
+    return s.startswith('#') or s.startswith(';') or s.startswith('//')
 
 
 human = Human(dotool, lambda: replay.aborted)

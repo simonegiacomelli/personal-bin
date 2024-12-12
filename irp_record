@@ -134,7 +134,7 @@ mouse_listener = mouse.Listener(on_move=mw('mm'), on_click=mw('mc'), on_scroll=m
 
 
 def start():
-    file.append_raw(f'# irp_record {dt}\n')
+    file.append_raw(f'; irp_record {dt}\n')
     keyboard_listener.start()
     mouse_listener.start()
     beep()
