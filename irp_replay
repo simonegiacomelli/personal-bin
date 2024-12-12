@@ -123,6 +123,9 @@ def process_line(line: Line):
     if command == 'human':
         human.process_line(line)
         return
+    if command == 'exit':
+        replay.abort('Exit command found')
+        return
 
     delay_secs = float(line.args[0])
     print(f' delay {delay_secs}')
