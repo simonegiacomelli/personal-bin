@@ -96,6 +96,9 @@ def append_command(command: str, *args):
 def key_handle(prefix: str, key: Key | KeyCode):
     if isinstance(key, Key):
         key = key.name
+    if isinstance(key, KeyCode):
+        if key.vk == 65056:
+            key = 'tab'
     append_command(prefix, key)
 
 
