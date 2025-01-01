@@ -1,0 +1,67 @@
+#!/usr/bin/env -S uv run -q -s
+# /// script
+# requires-python = "==3.11.10"
+# dependencies = ["python-xlib"]
+# ///
+import os
+from datetime import datetime
+from time import sleep
+
+from Xlib import X, display
+from Xlib.ext import screensaver
+NON_IDLE = "NON_IDLE"
+IDLE = "IDLE"
+
+IDLE_THRESHOLD = 60000
+
+def get_x_idletime():
+    try:
+        dpy = display.Display()
+
+        if not dpy.has_extension("MIT-SCREEN-SAVER"):
+            raise RuntimeError("Screen Saver extension not supported")
+
+        root_window = dpy.screen().root
+        info = screensaver.query_info(root_window)
+
+        idle_time = info.idle
+
+        dpy.close()
+
+        return idle_time
+
+    except Exception as e:
+        print(f"Error while getting idle time: {e}")
+        return None
+
+def append_log(line:str):
+    print(line)
+    with open(os.path.expanduser('~/xlibidletime.log'), 'a') as f:
+        f.write(f'{line}\n')
+
+def change_state(state:str, idle_time_millis:int):
+    idle_time_seconds = idle_time_millis / 1000
+
+    append_log(f'{datetime.now()} {state} after {idle_time_seconds} seconds')
+
+def monitor_idle():
+    current_state = NON_IDLE
+
+    while True:
+        idle_time = get_x_idletime()
+
+        if idle_time >= IDLE_THRESHOLD and current_state == NON_IDLE:
+            current_state = IDLE
+            change_state('sending to idle', idle_time)
+            os.system("xset dpms force off")
+        elif idle_time < IDLE_THRESHOLD and current_state == IDLE:
+            current_state = NON_IDLE
+            change_state('coming back from idle', idle_time)
+        else:
+            print(f'\r{idle_time:<10}', end='', flush=True)
+
+        sleep(1)
+
+
+if __name__ == "__main__":
+    monitor_idle()
