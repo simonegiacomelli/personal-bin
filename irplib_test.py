@@ -57,8 +57,8 @@ def test_kp_altgr():
 
 
 def test_text_parse():
-    assert text_parse('cd $(mktemp -d demo-XXX)') == 'cd $(mktemp -d demo-XXX)'
-    assert text_parse('ls\\n') == 'ls\n'
+    assert text_parse('"cd $(mktemp -d demo-XXX)"') == 'cd $(mktemp -d demo-XXX)'
+    assert text_parse('"ls\\n"') == 'ls\n'
 
 
 class TestSmartSeparator:

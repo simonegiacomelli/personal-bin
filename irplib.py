@@ -23,7 +23,7 @@ class Line:
 
 
 def text_parse(text):
-    dec_text = json.loads(f'"{text}"')
+    dec_text = json.loads(text)
     return dec_text
 
 
