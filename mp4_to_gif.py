@@ -13,6 +13,9 @@ def convert_mp4_to_gif():
     for mp4_file in mp4_files:
         # Generate output filename (replace .mp4 with .gif)
         gif_file = mp4_file.with_suffix('.gif')
+        if gif_file.exists():
+            print(f"{gif_file} already exists. Skipping conversion.")
+            continue
         
         # Construct the ffmpeg command
         ffmpeg_cmd = [
