@@ -60,7 +60,7 @@ def monitor_idle():
         else:
             print(f'\r{idle_time:<10}', end='', flush=True)
 
-        sleep(1)
+        sleep(3)
 
 
 if __name__ == "__main__":
