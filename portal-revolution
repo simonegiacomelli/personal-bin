@@ -1,0 +1,5 @@
+#!/bin/bash
+sudo mv /usr/share/vulkan/icd.d/nvidia_icd.json_inactive /usr/share/vulkan/icd.d/nvidia_icd.json
+cd ~/.local/share/Steam/steamapps/common/
+cd 'Portal Revolution'
+prime-run ./launch_game.sh
