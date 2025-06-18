@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import argparse
+import sys
 from pathlib import Path
 import shutil
 
 def main():
     parser = argparse.ArgumentParser(description='Copy files matching a glob pattern from source to target, preserving folder structure')
-    parser.add_argument('source', type=Path, help='path to the source directory (must exist)')
-    parser.add_argument('target', type=Path, help='path to the empty target directory (must exist and be empty)')
+    parser.add_argument('source', type=Path, help='source directory (must exist)')
+    parser.add_argument('target', type=Path, help='empty target directory (must exist and be empty)')
     parser.add_argument('pattern', help='glob pattern to match files (e.g. "*.svg" or "*.html")')
     args = parser.parse_args()
 
@@ -14,8 +15,15 @@ def main():
     tgt = args.target
     pat = args.pattern
 
-    assert src.exists() and src.is_dir()
-    assert tgt.exists() and tgt.is_dir() and not any(tgt.iterdir())
+    if not src.exists() or not src.is_dir():
+        print(f"Error: source {src} does not exist or is not a directory", file=sys.stderr)
+        sys.exit(1)
+    if not tgt.exists() or not tgt.is_dir():
+        print(f"Error: target {tgt} does not exist or is not a directory", file=sys.stderr)
+        sys.exit(1)
+    if any(tgt.iterdir()):
+        print(f"Error: target {tgt} is not empty", file=sys.stderr)
+        sys.exit(1)
 
     for f in src.rglob(pat):
         if f.is_file():
