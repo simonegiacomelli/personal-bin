@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+import argparse
+from pathlib import Path
+import shutil
+
+def main():
+    parser = argparse.ArgumentParser(description='Copy files matching a glob pattern from source to target, preserving folder structure')
+    parser.add_argument('source', type=Path, help='path to the source directory (must exist)')
+    parser.add_argument('target', type=Path, help='path to the empty target directory (must exist and be empty)')
+    parser.add_argument('pattern', help='glob pattern to match files (e.g. "*.svg" or "*.html")')
+    args = parser.parse_args()
+
+    src = args.source
+    tgt = args.target
+    pat = args.pattern
+
+    assert src.exists() and src.is_dir()
+    assert tgt.exists() and tgt.is_dir() and not any(tgt.iterdir())
+
+    for f in src.rglob(pat):
+        if f.is_file():
+            rel = f.relative_to(src)
+            print(f'Copying {f} to {tgt / rel.parent / f.name}')
+            d = tgt / rel.parent
+            d.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(f, d / f.name)
+
+if __name__ == '__main__':
+    main()
