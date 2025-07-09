@@ -19,8 +19,8 @@ def execute_command(command: str):
 def main():
     # Execute commands
     execute_command("kill-port 8000")
-    execute_command("pkill -15 pycharm")
-    time.sleep(2)
+    # execute_command("pkill -15 pycharm")
+    # time.sleep(2)
     # Define folder paths
     chatty_folder = Path.home() / "chatty"
     idea_folder = chatty_folder / ".idea"
@@ -29,23 +29,23 @@ def main():
     # Check and process the folder
     if chatty_folder.exists():
         print('Moving chatty folder')
-        if idea_folder.exists():
-            shutil.rmtree(idea_folder)
+        # if idea_folder.exists():
+        #     shutil.rmtree(idea_folder)
 
         destination_folder.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(chatty_folder), str(destination_folder))
+        if chatty_folder.exists():
+            print(f'Folder chatty still exists!!')
+            sys.exit(1)
         chatty_folder.mkdir(exist_ok=False)
         shutil.copyfile('/home/simone/Documents/python/chatty-demo/main.py', '/home/simone/chatty/main.py')
     else:
         print('Folder chatty not found')
 
     os.system('pycharm /home/simone/Documents/python/wwwpy > /dev/null 2>&1 &')
-    time.sleep(8)
+    # time.sleep(1)
     # os.system('wmctrl -r "wwwpy " -b add,hidden')
 
-    # if chatty_folder.exists():
-    # print(f'Folder chatty still exists!!')
-    # sys.exit(1)
 
 
 if __name__ == "__main__":

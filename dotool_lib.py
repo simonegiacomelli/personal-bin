@@ -33,8 +33,10 @@ class DotoolKeyboard:
         special = mapping.get(char, None)
         if special:
             self.send(f'key {special}')
+            print(special, end='')
         else:
             self.send(f'type {char}')
+            print(char, end='')
 
     def has_chord(self, key: str):
         return key in self.dotool_keys.keys
