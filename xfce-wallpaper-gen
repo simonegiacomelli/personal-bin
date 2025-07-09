@@ -17,12 +17,17 @@ def main():
     du = shutil.disk_usage('/')
     free = human_readable(du.free)
     uptime = subprocess.check_output(['uptime','-p'], text=True).strip()
-    res = subprocess.check_output(
-        "xrandr | grep \"*\" | awk 'NR==1{print $1}'",
-        shell=True, text=True
-    ).strip()
-    if not res:
+
+    try:
+        res = subprocess.check_output(
+            "xrandr | grep \"*\" | awk 'NR==1{print $1}'",
+            shell=True, text=True
+        ).strip()
+        if not res:
+            res = "1920x1080"
+    except subprocess.CalledProcessError:
         res = "1920x1080"
+
     out = os.path.expanduser('~/.cache/generated-wallpaper.png')
     subprocess.run([
         'convert',
