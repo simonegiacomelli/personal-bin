@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+import subprocess
+import argparse
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--set', metavar='IMAGE', help='set last-image to IMAGE')
+    parser.add_argument('--values', action='store_true', help='also print current values')
+    args = parser.parse_args()
+
+    props = subprocess.check_output(
+        ['xfconf-query', '-c', 'xfce4-desktop', '-l'],
+        text=True
+    ).splitlines()
+
+    for prop in props:
+        if prop.endswith('last-image'):
+            if args.values:
+                value = subprocess.check_output(
+                    ['xfconf-query', '-c', 'xfce4-desktop', '-p', prop],
+                    text=True
+                ).strip()
+                print(f'{prop} = {value}')
+            else:
+                print(prop)
+            if args.set:
+                subprocess.run([
+                    'xfconf-query',
+                    '--channel', 'xfce4-desktop',
+                    '--property', prop,
+                    '--create', '-t', 'string',
+                    '--set', args.set
+                ])
+
+if __name__ == '__main__':
+    main()
+
+
