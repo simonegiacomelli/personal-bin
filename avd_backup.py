@@ -9,7 +9,6 @@ import sys
 import zipfile
 import argparse
 from pathlib import Path
-import configparser
 
 
 def get_avd_dir():
@@ -51,10 +50,16 @@ def print_avd_info(config_file):
     """Print relevant info from config.ini"""
     if not config_file.exists():
         return
-    
-    config = configparser.ConfigParser()
-    config.read(config_file)
-    
+
+    # Read config file as plain text (no section headers)
+    config_data = {}
+    with open(config_file, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line and '=' in line:
+                key, value = line.split('=', 1)
+                config_data[key.strip()] = value.strip()
+
     interesting_keys = {
         'hw.lcd.width': 'Width',
         'hw.lcd.height': 'Height',
@@ -64,14 +69,11 @@ def print_avd_info(config_file):
         'hw.keyboard': 'Hardware Keyboard',
         'skin.name': 'Skin',
     }
-    
+
     print("  Configuration:")
     for key, label in interesting_keys.items():
-        for section in config.sections():
-            if key in config[section]:
-                value = config[section][key]
-                print(f"    • {label}: {value}")
-                break
+        if key in config_data:
+            print(f"    • {label}: {config_data[key]}")
 
 
 def backup_avd(avd_info, output_path):
@@ -153,9 +155,15 @@ def restore_avd(zip_path):
             if config_file in files:
                 print(f"\n⚙️  Configuration preview:")
                 config_content = zipf.read(config_file).decode('utf-8')
-                config = configparser.ConfigParser()
-                config.read_string(config_content)
-                
+
+                # Parse config as plain text (no section headers)
+                config_data = {}
+                for line in config_content.splitlines():
+                    line = line.strip()
+                    if line and '=' in line:
+                        key, value = line.split('=', 1)
+                        config_data[key.strip()] = value.strip()
+
                 interesting_keys = {
                     'hw.lcd.width': 'Width',
                     'hw.lcd.height': 'Height',
@@ -163,12 +171,10 @@ def restore_avd(zip_path):
                     'hw.ramSize': 'RAM',
                     'image.sysdir.1': 'System Image',
                 }
-                
+
                 for key, label in interesting_keys.items():
-                    for section in config.sections():
-                        if key in config[section]:
-                            print(f"   • {label}: {config[section][key]}")
-                            break
+                    if key in config_data:
+                        print(f"   • {label}: {config_data[key]}")
             
             # Ask for confirmation
             print(f"\n{'='*60}")
