@@ -1,11 +1,31 @@
 #!/usr/bin/env python3
 import os
+import shutil
 import sys
+
+cwd = os.getcwd()
 
 if sys.platform == 'darwin':
     os.system(f"""osascript -e 'tell app "Terminal"
-           do script "cd {os.getcwd()}"
+           do script "cd {cwd}"
            activate
        end tell'""")
 else:
-    os.system(f"exo-open --launch TerminalEmulator")
+    # Try terminal emulators in order of preference
+    terminals = [
+        ('ptyxis', ['ptyxis', '--new-window', f'--working-directory={cwd}']),
+        ('gnome-terminal', ['gnome-terminal', f'--working-directory={cwd}']),
+        ('konsole', ['konsole', f'--workdir={cwd}']),
+        ('xfce4-terminal', ['xfce4-terminal', f'--working-directory={cwd}']),
+        ('kitty', ['kitty', '--directory', cwd]),
+        ('alacritty', ['alacritty', '--working-directory', cwd]),
+        ('exo-open', ['exo-open', '--launch', 'TerminalEmulator']),
+    ]
+
+    for name, cmd in terminals:
+        if shutil.which(name):
+            os.execvp(cmd[0], cmd)
+            break
+    else:
+        print("No supported terminal emulator found", file=sys.stderr)
+        sys.exit(1)
