@@ -1,0 +1,20 @@
+#!/bin/bash
+
+echo "=== Systemd Inhibitors Blocking Sleep ==="
+systemd-inhibit --list | awk 'NR==1 || /sleep.*block/'
+echo ""
+
+echo "=== GNOME Session Inhibitors Blocking Suspend ==="
+gdbus call --session --dest org.gnome.SessionManager --object-path /org/gnome/SessionManager --method org.gnome.SessionManager.GetInhibitors 2>/dev/null | grep -oP '/org/gnome/SessionManager/Inhibitor\d+' | while read inhibitor; do
+  app=$(gdbus call --session --dest org.gnome.SessionManager --object-path "$inhibitor" --method org.gnome.SessionManager.Inhibitor.GetAppId 2>/dev/null | sed "s/[(),']//g" | xargs)
+  reason=$(gdbus call --session --dest org.gnome.SessionManager --object-path "$inhibitor" --method org.gnome.SessionManager.Inhibitor.GetReason 2>/dev/null | sed "s/[(),']//g" | xargs)
+  flags=$(gdbus call --session --dest org.gnome.SessionManager --object-path "$inhibitor" --method org.gnome.SessionManager.Inhibitor.GetFlags 2>/dev/null | grep -oP 'uint32 \K\d+')
+
+  if [ -n "$flags" ] && [ $((flags & 4)) -ne 0 ]; then
+    echo "  ⛔ $app"
+    echo "     Reason: $reason"
+    echo ""
+  fi
+done
+
+echo "Flag reference: 1=INHIBIT_LOGOUT, 4=INHIBIT_SUSPEND, 8=INHIBIT_IDLE"
