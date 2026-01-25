@@ -21,7 +21,8 @@ if sys.platform == 'darwin':
 else:
     # Try terminal emulators in order of preference
     terminals = [
-        ('ptyxis', ['ptyxis', '--new-window', f'--working-directory={cwd}']),
+        ('ptyxis', ['systemd-run', '--user', '--quiet', '--collect',
+                    'ptyxis', '--new-window', f'--working-directory={cwd}']),
         ('gnome-terminal', ['gnome-terminal', f'--working-directory={cwd}']),
         ('konsole', ['konsole', f'--workdir={cwd}']),
         ('xfce4-terminal', ['xfce4-terminal', f'--working-directory={cwd}']),
