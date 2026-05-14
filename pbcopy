@@ -4,7 +4,7 @@ set -eu
 if [ -n "${WAYLAND_DISPLAY:-}" ] && command -v wl-copy >/dev/null 2>&1; then
     exec wl-copy
 elif [ -n "${DISPLAY:-}" ] && command -v xclip >/dev/null 2>&1; then
-    exec xclip -selection clipboard
+    exec xclip -sel c
 elif [ -n "${DISPLAY:-}" ] && command -v xsel >/dev/null 2>&1; then
     exec xsel --clipboard --input
 else
