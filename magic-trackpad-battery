@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+import fcntl
+import glob
+import os
+
+
+if os.geteuid():
+    os.execlp("sudo", "sudo", os.path.realpath(__file__))
+
+
+for path in glob.glob("/dev/hidraw*"):
+    name = os.path.basename(path)
+
+    try:
+        with open(f"/sys/class/hidraw/{name}/device/uevent") as file:
+            info = dict(line.rstrip().split("=", 1) for line in file if "=" in line)
+    except OSError:
+        continue
+
+    if "Magic Trackpad" not in info.get("HID_NAME", ""):
+        continue
+
+    bus = int(info["HID_ID"].split(":", 1)[0], 16)
+    connection = {0x03: "cable", 0x05: "bluetooth"}.get(bus)
+    if connection is None:
+        continue
+
+    report = bytearray([0x90, 0, 0, 0])
+    try:
+        with open(path, "r+b", buffering=0) as device:
+            fcntl.ioctl(device, 0xC004480A, report, True)
+    except OSError:
+        continue
+
+    percentage = report[2]
+    if report[0] == 0x90 and percentage <= 100:
+        print(f"Connection: {connection}")
+        print(f"Battery: {percentage}%")
+        break
+else:
+    raise SystemExit("Magic Trackpad unavailable")
