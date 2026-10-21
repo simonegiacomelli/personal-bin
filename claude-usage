@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Claude plan quotas, rendered like /usage. Undocumented endpoint, may break.
-import json, os, sys, time, urllib.request
+import json, os, select, sys, time, urllib.request
 from datetime import datetime, timedelta
 
 def fetch():
@@ -47,7 +47,7 @@ if len(sys.argv) < 2:
     print(render(fetch()), end="")
     sys.exit()
 
-# claude-usage N: redraw every N seconds, Ctrl-C to quit
+# claude-usage N: redraw every N seconds (or on Enter), Ctrl-C to quit
 last = ""
 try:
     while True:
@@ -56,6 +56,10 @@ try:
         except Exception as e:  # keep looping on network/token hiccups, show last good data
             out = last + f"{PAD}{esc(f'38;2;{GREY}')}update failed {time.strftime('%H:%M:%S')}: {e}{reset}\n"
         print("\033[H\033[2J" + out, end="", flush=True)
-        time.sleep(float(sys.argv[1]))
+        if sys.stdin.isatty():
+            if select.select([sys.stdin], [], [], float(sys.argv[1]))[0]:
+                sys.stdin.readline()
+        else:
+            time.sleep(float(sys.argv[1]))
 except KeyboardInterrupt:
     pass
