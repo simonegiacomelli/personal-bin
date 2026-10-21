@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+# Claude plan quotas, rendered like /usage. Undocumented endpoint, may break.
+import json, os, sys, time, urllib.request
+from datetime import datetime, timedelta
+
+def fetch():
+    # re-read every time: Claude Code rotates the token
+    token = json.load(open(os.path.expanduser("~/.claude/.credentials.json")))["claudeAiOauth"]["accessToken"]
+    req = urllib.request.Request("https://api.anthropic.com/api/oauth/usage", headers={
+        "Authorization": f"Bearer {token}", "anthropic-beta": "oauth-2025-04-20"})
+    return json.load(urllib.request.urlopen(req, timeout=30))["limits"]
+
+tz = os.environ.get("TZ") or os.path.realpath("/etc/localtime").split("zoneinfo/")[-1]
+tty = sys.stdout.isatty()
+# colors sampled from the real /usage screen
+FILL, EMPTY, GREY = "177;185;249", "80;83;112", "153;153;153"
+esc = lambda code: f"\033[{code}m" if tty else ""
+reset = esc(0)
+WIDTH = 50
+
+def bar(pct):
+    eighths = round(pct / 100 * WIDTH * 8)
+    full, part = divmod(eighths, 8)
+    out = esc(f"38;2;{FILL}") + "█" * full
+    if part:
+        out += esc(f"48;2;{EMPTY}") + "▏▎▍▌▋▊▉"[part - 1]
+    return out + esc(f"48;2;{EMPTY}") + " " * (WIDTH - full - bool(part)) + reset
+
+def when(iso):
+    t = (datetime.fromisoformat(iso) + timedelta(seconds=30)).astimezone().replace(second=0, microsecond=0)
+    s = t.strftime("%-I%p" if t.minute == 0 else "%-I:%M%p").lower()
+    if t.date() != datetime.now().date():
+        s = t.strftime("%b %-d, ") + s
+    return f"{s} ({tz})"
+
+titles = {"session": "Current session", "weekly_all": "Current week (all models)"}
+PAD = " " * 3  # same left margin as /usage
+
+def render(limits):
+    out = "\n"
+    for l in limits:
+        name = titles.get(l["kind"]) or f"Current week ({l['scope']['model']['display_name']})"
+        out += f"{PAD}{esc(1)}{name}{reset}\n{PAD}{bar(l['percent'])} {l['percent']}% used\n{PAD}{esc(f'38;2;{GREY}')}Resets {when(l['resets_at'])}{reset}\n\n"
+    return out
+
+if len(sys.argv) < 2:
+    print(render(fetch()), end="")
+    sys.exit()
+
+# claude-usage N: redraw every N seconds, Ctrl-C to quit
+last = ""
+try:
+    while True:
+        try:
+            out = last = render(fetch())
+        except Exception as e:  # keep looping on network/token hiccups, show last good data
+            out = last + f"{PAD}{esc(f'38;2;{GREY}')}update failed {time.strftime('%H:%M:%S')}: {e}{reset}\n"
+        print("\033[H\033[2J" + out, end="", flush=True)
+        time.sleep(float(sys.argv[1]))
+except KeyboardInterrupt:
+    pass
